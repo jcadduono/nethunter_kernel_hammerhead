@@ -461,3 +461,11 @@ config SND_SOC_MSM_HDMI_CODEC_RX
 	help
 	HDMI audio drivers should be built only if the platform
         supports hdmi panel.
+
+# FauxSound Control
+config SOUND_CONTROL_HAX_3_GPL
+	tristate "FauxSound Control 3.6 for WCD93xx"
+	depends on SND_SOC_WCD9320
+	default y
+	help
+	  FauxSound WCD93xx chipset sound control hacks 3.6 for deeper hax
