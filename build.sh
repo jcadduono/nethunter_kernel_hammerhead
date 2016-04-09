@@ -4,9 +4,9 @@
 # root directory of NetHunter hammerhead git repo (default is this script's location)
 RDIR=$(pwd)
 
-[ $VER ] || \
+[ "$VER" ] ||
 # version number
-VER=$(cat $RDIR/VERSION)
+VER=$(cat "$RDIR/VERSION")
 
 # directory containing cross-compile arm toolchain
 TOOLCHAIN=$HOME/build/toolchain/arm-cortex_a15-linux-gnueabihf-linaro_4.9.4-2015.06
@@ -18,9 +18,8 @@ THREADS=5
 
 export ARCH=arm
 export CROSS_COMPILE=$TOOLCHAIN/bin/arm-cortex_a15-linux-gnueabihf-
-export LOCALVERSION=$VER
 
-cd $RDIR
+cd "$RDIR"
 
 [ "$TARGET" ] || TARGET=nethunter
 [ "$1" ] && {
@@ -35,23 +34,39 @@ DEFCONFIG=${TARGET}_${DEVICE}_defconfig
 	exit 1
 }
 
-KDIR=$RDIR/build/arch/$ARCH/boot
+export LOCALVERSION=$TARGET-$DEVICE-$VER
+
+ABORT()
+{
+	echo "Error: $*"
+	exit 1
+}
 
 CLEAN_BUILD()
 {
 	echo "Cleaning build..."
-	cd $RDIR
+	cd "$RDIR"
 	rm -rf build
+}
+
+SETUP_BUILD()
+{
+	echo "Creating kernel config for $LOCALVERSION..."
+	cd "$RDIR"
+	mkdir -p build
+	make -C "$RDIR" O=build "$DEFCONFIG" || ABORT "Failed to set up build"
 }
 
 BUILD_KERNEL()
 {
-	echo "Creating kernel config..."
-	cd $RDIR
-	mkdir -p build
-	make -C $RDIR O=build $DEFCONFIG
-	echo "Starting build for ${TARGET}-${DEVICE}-${LOCALVERSION}..."
-	make -C $RDIR O=build -j"$THREADS"
+	echo "Starting build for $LOCALVERSION..."
+	while ! make -C "$RDIR" O=build -j"$THREADS"; do
+		read -p "Build failed. Retry? " do_retry
+		case $do_retry in
+			Y|y) continue ;;
+			*) return 1 ;;
+		esac
+	done
 }
 
-CLEAN_BUILD && BUILD_KERNEL && echo "Finished building ${TARGET}-${DEVICE}-${LOCALVERSION}!"
+CLEAN_BUILD && SETUP_BUILD && BUILD_KERNEL && echo "Finished building $LOCALVERSION!"

@@ -26,11 +26,11 @@ DEFCONFIG_FILE=$RDIR/arch/$ARCH/configs/$DEFCONFIG
 	exit 1
 }
 
-cd $RDIR
+cd "$RDIR"
 echo "Cleaning build..."
 rm -rf build
 mkdir build
-make -s -i -C $RDIR O=build $DEFCONFIG menuconfig
+make -s -i -C "$RDIR" O=build "$DEFCONFIG" menuconfig
 echo "Showing differences between old config and new config"
 echo "-----------------------------------------------------"
 command -v colordiff >/dev/null 2>&1 && {
